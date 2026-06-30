@@ -1,0 +1,63 @@
+name: Build DictSprite
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: npm
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Download NodeGUI Qt runtime
+      run: |
+        Invoke-WebRequest https://github.com/nodegui/nodegui/releases/download/v0.63.0/qt-win64.zip -OutFile qt.zip
+        Expand-Archive qt.zip -DestinationPath qt
+        Copy-Item qt\Qt5Core.dll .
+        Copy-Item qt\Qt5Gui.dll .
+        Copy-Item qt\Qt5Widgets.dll .
+        mkdir platforms
+        Copy-Item qt\platforms\qwindows.dll platforms\
+
+    - name: Install pkg globally
+      run: npm install pkg -g
+
+    - name: Compile GUI program
+      run: pkg win.js --target win-x64 --output DictSprite.exe
+
+    - name: Compile CLI backend program
+      run: pkg cli.js --target win-x64 --output DictSprite_CLI.exe
+
+    - name: Install NSIS compiler
+      uses: ilammy/setup-nsis@v2
+
+    - name: Build NSIS installer
+      run: makensis build.nsi
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: DictSprite_Installer
+        path: DictSprite_Setup.exe
+
+    - name: Auto create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: DictSprite_Setup.exe
+        tag_name: latest
+        name: DictSprite Latest Build
+        body: 本次自動編譯構建，包含圖形界面主程式以及可供PASS System呼叫的CLI後台引擎，全程離線運行，詞庫來源CC-CEDICT，源代碼apache2.0協議。
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
