@@ -1,0 +1,39 @@
+name: Build Installer Package
+on:
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Download NSIS
+      run: |
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Invoke-WebRequest https://downloads.sourceforge.net/project/nsis/NSIS%203/3.08/nsis-3.08.zip -OutFile nsis.zip
+        Expand-Archive nsis.zip -DestinationPath nsis -Force
+        "$env:GITHUB_WORKSPACE\nsis\makensis.exe" | Out-File nsispath.txt
+
+    - name: Compile NSIS
+      run: |
+        $nsis = Get-Content nsispath.txt
+        & $nsis build.nsi
+
+    - name: Upload installer
+      uses: actions/upload-artifact@v4
+      with:
+        name: Full_Installer
+        path: DictSprite_Setup.exe
+
+    - name: Auto Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: DictSprite_Setup.exe
+        tag_name: build-${{ github.run_number }}
+        name: DictSprite Release
+        body: 包含GUI主程式、可供PASS System呼叫的CLI後台引擎，全程本機離線運行。
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
