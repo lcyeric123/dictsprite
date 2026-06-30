@@ -2,13 +2,17 @@ name: Build Installer Package
 on:
   workflow_dispatch:
 
+# 必须写在整个文件最顶端，写在job内部不会生效
+permissions:
+  contents: write
+
 jobs:
   package:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
 
-    - name: Download standalone NSIS 3.08
+    - name: Download NSIS 3.08
       run: |
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         Invoke-WebRequest https://downloads.sourceforge.net/project/nsis/NSIS%203/3.08/nsis-3.08.zip -OutFile nsis.zip
@@ -20,20 +24,23 @@ jobs:
         $nsis = Get-Content nsispath.txt
         & $nsis build.nsi
 
-    - name: Upload setup file
+    - name: Fix file path bug (Windows独有BUG，不加就识别不到exe)
+      run: ren DictSprite_Setup.exe setup.exe
+
+    - name: Upload installer artifact
       uses: actions/upload-artifact@v4
       with:
         name: Full_Installer
-        path: DictSprite_Setup.exe
+        path: setup.exe
 
-    - name: Publish GitHub Release
+    - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
       with:
-        files: DictSprite_Setup.exe
+        files: setup.exe
         tag_name: build-${{ github.run_number }}
         name: DictSprite Release Build
-        body: 內含GUI圖形介面程式、可給PASS System呼叫的CLI後台程式，全程本機離線運作，無網路請求。
+        body: 內含GUI圖形介面程式、可給PASS System呼叫的CLI後台程式，全程本機離線運作，無任何網路傳輸。
         draft: false
         prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
