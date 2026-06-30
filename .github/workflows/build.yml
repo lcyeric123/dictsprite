@@ -38,11 +38,16 @@ jobs:
     - name: Compile CLI backend program
       run: pkg cli.js --target win-x64 --output DictSprite_CLI.exe
 
-    - name: Install NSIS compiler
-      uses: ilammy/setup-nsis@v2
+    - name: Download standalone NSIS
+      run: |
+        Invoke-WebRequest https://sourceforge.net/projects/nsis/files/NSIS%203/3.08/nsis-3.08.zip/download -OutFile nsis.zip
+        Expand-Archive nsis.zip -DestinationPath nsis
+        echo "$env:GITHUB_WORKSPACE\nsis\makensis.exe" | Out-File nsispath.txt
 
     - name: Build NSIS installer
-      run: makensis build.nsi
+      run: |
+        $nsis = Get-Content nsispath.txt
+        & $nsis build.nsi
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -54,9 +59,9 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: DictSprite_Setup.exe
-        tag_name: latest
-        name: DictSprite Latest Build
-        body: 本次自動編譯構建，包含圖形界面主程式以及可供PASS System呼叫的CLI後台引擎，全程離線運行，詞庫來源CC-CEDICT，源代碼apache2.0協議。
+        tag_name: build-${{ github.run_number }}
+        name: DictSprite Automatic Build
+        body: 本次自動編譯構建，包含圖形界面主程式以及可供PASS System呼叫的CLI後台引擎，全程離線運行，詞庫來源CC-CEDICT，源代碼MIT協議。
         draft: false
         prerelease: false
       env:
