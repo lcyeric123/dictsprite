@@ -1,8 +1,0 @@
-{
-  "name": "DictSprite",
-  "main": "win.js",
-  "dependencies": {
-    "opencc": "*",
-    "@nodegui/nodegui": "*"
-  }
-}
