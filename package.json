@@ -2,7 +2,7 @@
   "name": "DictSprite",
   "main": "win.js",
   "dependencies": {
-    "opencc": "^1.1",
-    "@nodegui/nodegui": "^0.62.2"
+    "opencc": "*",
+    "@nodegui/nodegui": "*"
   }
 }
