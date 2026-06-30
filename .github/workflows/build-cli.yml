@@ -18,16 +18,16 @@ jobs:
       with:
         node-version: 20
 
-    - name: Install all dependencies
+    - name: Install dependencies
       run: npm install
 
-    - name: Install pkg globally
+    - name: Install pkg
       run: npm install pkg -g
 
-    - name: Compile CLI only
-      run: pkg cli.js --target win-x64 --output DictSprite_CLI.exe
+    - name: Compile CLI (強制使用node18內核，pkg原生支援)
+      run: pkg cli.js --target node18-win-x64 --output DictSprite_CLI.exe
 
-    - name: Upload compiled CLI
+    - name: Upload CLI成品
       uses: actions/upload-artifact@v4
       with:
         name: CLI_Artifact
