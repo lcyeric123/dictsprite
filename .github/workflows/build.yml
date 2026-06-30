@@ -18,10 +18,10 @@ jobs:
       with:
         node-version: 20
 
-    - name: Install dependencies
+    - name: Install all packages
       run: npm install
 
-    - name: Download NodeGUI Qt runtime
+    - name: Download NodeGUI Qt runtime library
       run: |
         Invoke-WebRequest https://github.com/nodegui/nodegui/releases/download/v0.63.0/qt-win64.zip -OutFile qt.zip
         Expand-Archive qt.zip -DestinationPath qt
@@ -31,33 +31,33 @@ jobs:
         mkdir platforms
         Copy-Item qt\platforms\qwindows.dll platforms\
 
-    - name: Install pkg globally
+    - name: Install pkg compiler globally
       run: npm install pkg -g
 
-    - name: Compile GUI program
+    - name: Compile GUI program DictSprite.exe
       run: pkg win.js --target win-x64 --output DictSprite.exe
 
-    - name: Compile CLI backend program
+    - name: Compile backend CLI program
       run: pkg cli.js --target win-x64 --output DictSprite_CLI.exe
 
-    - name: Download standalone NSIS
+    - name: Download standalone NSIS 3.08
       run: |
-        Invoke-WebRequest https://sourceforge.net/projects/nsis/files/NSIS%203/3.08/nsis-3.08.zip/download -OutFile nsis.zip
+        Invoke-WebRequest https://downloads.sourceforge.net/project/nsis/NSIS%203/3.08/nsis-3.08.zip -OutFile nsis.zip
         Expand-Archive nsis.zip -DestinationPath nsis
         echo "$env:GITHUB_WORKSPACE\nsis\makensis.exe" | Out-File nsispath.txt
 
-    - name: Build NSIS installer
+    - name: Build NSIS installer package
       run: |
         $nsis = Get-Content nsispath.txt
         & $nsis build.nsi
 
-    - name: Upload artifact
+    - name: Upload compiled installer
       uses: actions/upload-artifact@v4
       with:
         name: DictSprite_Installer
         path: DictSprite_Setup.exe
 
-    - name: Auto create GitHub Release
+    - name: Auto publish GitHub Release
       uses: softprops/action-gh-release@v2
       with:
         files: DictSprite_Setup.exe
