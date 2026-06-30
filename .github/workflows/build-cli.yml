@@ -24,11 +24,11 @@ jobs:
     - name: Install pkg
       run: npm install pkg -g
 
-    - name: Compile CLI (強制使用node18內核，pkg原生支援)
+    - name: Compile CLI
       run: pkg cli.js --target node18-win-x64 --output DictSprite_CLI.exe
 
-    - name: Upload CLI成品
+    - name: Upload CLI成品（可直接下载）
       uses: actions/upload-artifact@v4
       with:
-        name: CLI_Artifact
+        name: DictSprite_CLI_编译成品
         path: DictSprite_CLI.exe
